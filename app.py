@@ -706,7 +706,7 @@ def exibir_resultados(resultado, apostas):
 # 🚀 INTERFACE DO USUÁRIO
 # ==============================================================================
 
-st.title("🍀 Conferidor Mega da Virada")
+st.title("🍀 Verificador Mega da Virada")
 st.markdown("<div style='text-align: center; color: #666; margin-bottom: 20px;'>Boa sorte! Que seus números sejam os sorteados!</div>", unsafe_allow_html=True)
 
 # Abas para Alternar entre Modos
@@ -776,4 +776,5 @@ with tab2:
 
 # Rodapé
 st.markdown("<div class='footer'>Desenvolvido por <b>André Santos</b> © 2025</div>", unsafe_allow_html=True)
+
 

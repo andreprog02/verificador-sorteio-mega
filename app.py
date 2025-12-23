@@ -10,7 +10,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # 🎨 CONFIGURAÇÃO VISUAL
 # ==============================================================================
 st.set_page_config(
-    page_title="Conferidor Mega da Virada 2025",
+    page_title="Verificador Mega da Virada 2025",
     page_icon="🍀",
     layout="centered",
     initial_sidebar_state="collapsed"
@@ -776,3 +776,4 @@ with tab2:
 
 # Rodapé
 st.markdown("<div class='footer'>Desenvolvido por <b>André Santos</b> © 2025</div>", unsafe_allow_html=True)
+

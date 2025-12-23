@@ -3,7 +3,7 @@ import re
 import requests
 import urllib3
 
-# Desabilitar avisos de segurança para a API da Caixa
+# Desabilitar avisos de segurança
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==============================================================================
@@ -16,15 +16,23 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# CSS para esconder menus e deixar bonito
+# CSS: Remove Menus, Limpa Inputs e Estiliza Cartões
 st.markdown("""
     <style>
-    /* Esconde menu do Streamlit */
+    /* 1. Esconde menus do Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
-    /* Estilo dos Cartões */
+    /* 2. Estilo dos Inputs Manuais (Visual Limpo) */
+    div[data-testid="stTextInput"] input {
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #1E3A8A;
+    }
+
+    /* 3. Estilo dos Cartões de Resultado */
     .ticket-card {
         padding: 15px;
         border-radius: 10px;
@@ -710,7 +718,7 @@ with tab1:
     with col_a:
         concurso_input = st.text_input("Número do Concurso", value="2955")
     with col_b:
-        st.write("") # Espaçamento vertical para alinhar botão
+        st.write("") 
         st.write("")
         btn_auto = st.button("BUSCAR NA CAIXA", type="primary", key="auto")
     
@@ -724,32 +732,47 @@ with tab1:
                 apostas = processar_jogos(MEUS_JOGOS)
                 exibir_resultados(resultado, apostas)
 
-# --- MODO 2: MANUAL (6 INPUTS) ---
+# --- MODO 2: MANUAL (6 INPUTS DE TEXTO LIMPOS) ---
 with tab2:
     st.info("Insira as 6 dezenas sorteadas:")
     cols = st.columns(6)
-    # Configuração estrita: min=1, max=60, step=1 (inteiro), formato %02d (ex: 05)
-    n1 = cols[0].number_input("Bola 1", min_value=1, max_value=60, value=None, step=1, format="%02d", placeholder="01")
-    n2 = cols[1].number_input("Bola 2", min_value=1, max_value=60, value=None, step=1, format="%02d", placeholder="02")
-    n3 = cols[2].number_input("Bola 3", min_value=1, max_value=60, value=None, step=1, format="%02d", placeholder="03")
-    n4 = cols[3].number_input("Bola 4", min_value=1, max_value=60, value=None, step=1, format="%02d", placeholder="04")
-    n5 = cols[4].number_input("Bola 5", min_value=1, max_value=60, value=None, step=1, format="%02d", placeholder="05")
-    n6 = cols[5].number_input("Bola 6", min_value=1, max_value=60, value=None, step=1, format="%02d", placeholder="06")
     
-    st.write("") # Espaço
+    # Cria 6 campos de TEXTO (sem setas, sem X)
+    n1 = cols[0].text_input("Bola 1", max_chars=2, placeholder="01")
+    n2 = cols[1].text_input("Bola 2", max_chars=2, placeholder="02")
+    n3 = cols[2].text_input("Bola 3", max_chars=2, placeholder="03")
+    n4 = cols[3].text_input("Bola 4", max_chars=2, placeholder="04")
+    n5 = cols[4].text_input("Bola 5", max_chars=2, placeholder="05")
+    n6 = cols[5].text_input("Bola 6", max_chars=2, placeholder="06")
+    
     if st.button("CONFERIR MANUALMENTE", type="primary", key="manual"):
-        # Se algum valor for None (não preenchido), avisa
-        if None in [n1, n2, n3, n4, n5, n6]:
-             st.warning("⚠️ Preencha todas as 6 dezenas antes de conferir.")
+        inputs = [n1, n2, n3, n4, n5, n6]
+        
+        # Validação
+        if any(v == "" for v in inputs):
+            st.warning("⚠️ Preencha todas as 6 dezenas.")
         else:
-            numeros = {n1, n2, n3, n4, n5, n6}
-            if len(numeros) < 6:
-                st.warning("⚠️ Números repetidos detectados. Insira 6 números diferentes.")
-            else:
-                st.balloons()
-                st.success(f"Conferindo: {', '.join(map(str, sorted(numeros)))}")
-                apostas = processar_jogos(MEUS_JOGOS)
-                exibir_resultados(numeros, apostas)
+            try:
+                # Converte para inteiro e valida intervalo
+                numeros_int = []
+                for val in inputs:
+                    num = int(val)
+                    if num < 1 or num > 60:
+                        raise ValueError
+                    numeros_int.append(num)
+                
+                numeros_set = set(numeros_int)
+                
+                if len(numeros_set) < 6:
+                    st.warning("⚠️ Números repetidos detectados. Insira 6 números diferentes.")
+                else:
+                    st.balloons()
+                    st.success(f"Conferindo: {', '.join(map(str, sorted(numeros_set)))}")
+                    apostas = processar_jogos(MEUS_JOGOS)
+                    exibir_resultados(numeros_set, apostas)
+                    
+            except ValueError:
+                st.error("⚠️ Erro: Certifique-se de digitar apenas números entre 01 e 60.")
 
 # Rodapé
 st.markdown("<div class='footer'>Desenvolvido por <b>André Santos</b> © 2025</div>", unsafe_allow_html=True)

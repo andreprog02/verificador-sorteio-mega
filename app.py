@@ -15,6 +15,21 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="collapsed"
 )
+# ... (logo abaixo de st.set_page_config)
+
+# 🔒 REMOVER MENU E RODAPÉ PADRÃO
+st.markdown("""
+    <style>
+        /* Esconde o menu de 3 pontinhos no canto superior direito */
+        #MainMenu {visibility: hidden;}
+        
+        /* Esconde o rodapé padrão "Made with Streamlit" */
+        footer {visibility: hidden;}
+        
+        /* Esconde o cabeçalho colorido */
+        header {visibility: hidden;}
+    </style>
+    """, unsafe_allow_html=True)
 
 # CSS Personalizado para Cartões Bonitos
 st.markdown("""
@@ -805,4 +820,5 @@ if btn_conferir:
                         """, unsafe_allow_html=True)
 
 # Rodapé com Créditos
+
 st.markdown("<div class='footer'>Desenvolvido por <b>André Santos</b> © 2025</div>", unsafe_allow_html=True)

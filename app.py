@@ -7,7 +7,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ==============================================================================
-# 🎨 CONFIGURAÇÃO VISUAL (MODERNO & CLEAN)
+# 🎨 CONFIGURAÇÃO VISUAL
 # ==============================================================================
 st.set_page_config(
     page_title="Conferidor Mega da Virada 2025",
@@ -16,90 +16,33 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# CSS Personalizado: Estilo, Cartões e REMOÇÃO DO MENU (Segurança Visual)
+# CSS para esconder menus e deixar bonito
 st.markdown("""
     <style>
-    /* 🔒 SEGURANÇA VISUAL: ESCONDER MENUS DO STREAMLIT */
+    /* Esconde menu do Streamlit (Segurança Visual) */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
-    /* Estilo Geral */
-    .main {
-        background-color: #F8F9FA;
-    }
-    h1 {
-        color: #1E3A8A;
-        text-align: center;
-        font-family: 'Arial', sans-serif;
-        font-weight: 800;
-        margin-bottom: 0px;
-    }
-    .subtitle {
-        text-align: center;
-        color: #6c757d;
-        font-size: 0.9em;
-        margin-bottom: 30px;
-    }
-    
-    /* Cartões de Resultado */
+    /* Estilo dos Cartões */
     .ticket-card {
-        padding: 20px;
-        border-radius: 12px;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        font-family: 'Verdana', sans-serif;
-        color: #333;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        font-family: sans-serif;
         background-color: white;
+        color: #333;
     }
+    .sena-card { border-left: 8px solid #FFD700; background-color: #FFFDE7; }
+    .quina-card { border-left: 8px solid #1976D2; background-color: #E3F2FD; }
+    .quadra-card { border-left: 8px solid #388E3C; background-color: #E8F5E9; }
     
-    /* Cores Específicas para Prêmios */
-    .sena-card {
-        background: linear-gradient(135deg, #FFFDE7 0%, #FFF59D 100%);
-        border-left: 8px solid #FBC02D;
-    }
-    .quina-card {
-        background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-        border-left: 8px solid #1976D2;
-    }
-    .quadra-card {
-        background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
-        border-left: 8px solid #388E3C;
-    }
+    .local-tag { font-size: 0.8em; font-weight: bold; color: #666; display: block; margin-bottom: 5px; }
+    .win-title { font-size: 1.1em; font-weight: bold; }
+    .numbers { font-family: monospace; font-weight: bold; background: #eee; padding: 2px 6px; border-radius: 4px; }
     
-    /* Tags e Textos */
-    .local-tag {
-        font-size: 0.75em;
-        text-transform: uppercase;
-        color: #666;
-        font-weight: bold;
-        letter-spacing: 1px;
-        margin-bottom: 8px;
-        display: block;
-    }
-    .win-title {
-        font-size: 1.1em;
-        font-weight: bold;
-        margin: 5px 0;
-    }
-    .numbers {
-        background-color: rgba(0,0,0,0.05);
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-family: 'Courier New', monospace;
-        font-weight: bold;
-        color: #000;
-    }
-    
-    /* Rodapé */
-    .footer {
-        text-align: center;
-        color: #adb5bd;
-        font-size: 0.85em;
-        margin-top: 50px;
-        padding-top: 20px;
-        border-top: 1px solid #e9ecef;
-    }
+    .footer { margin-top: 50px; text-align: center; font-size: 0.8em; color: #888; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -674,9 +617,8 @@ E: 04 - 20 - 31 - 41 - 51 - 52
 """
 
 # ==============================================================================
-# ⚙️ FUNÇÕES DO BACKEND (LÓGICA)
+# ⚙️ FUNÇÕES
 # ==============================================================================
-
 def buscar_resultado_api(concurso):
     url = f"https://servicebus2.caixa.gov.br/portaldeloterias/api/megasena/{concurso}"
     try:
@@ -700,154 +642,109 @@ def processar_jogos(texto_jogos):
     for linha in texto_jogos.split('\n'):
         linha = linha.strip()
         if not linha: continue
-        
-        # Identifica cabeçalhos de imagem
         if "IMAGEM" in linha or "Cupom" in linha:
             imagem_atual = linha.replace('#', '').replace('*', '').strip()
             contador_simples = 1
             continue
-
         match = padrao_aposta.search(linha)
         if match:
-            # Captura ID (Letra) ou gera um número
             identificador = match.group(1)
             if not identificador:
                 identificador = f"Jogo {contador_simples}"
                 contador_simples += 1
             else:
                 identificador = identificador.replace(':', '')
-
             numeros_str = match.group(2).replace('-', ' ').split()
-            numeros_int = set(map(int, numeros_str))
-            
             apostas_processadas.append({
                 'id': identificador,
-                'nums': numeros_int,
+                'nums': set(map(int, numeros_str)),
                 'local': imagem_atual
             })
-            
     return apostas_processadas
 
 def exibir_resultados(resultado, apostas):
     premios = {'Sena': [], 'Quina': [], 'Quadra': []}
-    
-    # Confere
     for aposta in apostas:
         acertos = aposta['nums'].intersection(resultado)
         qtd = len(acertos)
-        
         detalhe = {
             'local': aposta['local'],
             'id': aposta['id'],
             'acertos': sorted(acertos),
             'numeros_full': sorted(aposta['nums'])
         }
-        
         if qtd == 4: premios['Quadra'].append(detalhe)
         elif qtd == 5: premios['Quina'].append(detalhe)
         elif qtd >= 6: premios['Sena'].append(detalhe)
 
-    # Exibe Resultados
     total_premios = len(premios['Sena']) + len(premios['Quina']) + len(premios['Quadra'])
-    
     if total_premios == 0:
         st.warning("😢 Nenhum prêmio encontrado nestes bilhetes.")
     else:
-        # Sena
         if premios['Sena']:
             st.markdown("### 🏆 SENA (6 Acertos)")
             for p in premios['Sena']:
-                st.markdown(f"""
-                <div class="ticket-card sena-card">
-                    <span class="local-tag">📍 {p['local']}</span>
-                    <div class="win-title">BILHETE {p['id']} - GANHADOR DA SENA!</div>
-                    <div>Seus Números: <span class="numbers">{', '.join(map(str, p['numeros_full']))}</span></div>
-                </div>
-                """, unsafe_allow_html=True)
-        
-        # Quina
+                st.markdown(f"<div class='ticket-card sena-card'><span class='local-tag'>📍 {p['local']}</span><div class='win-title'>BILHETE {p['id']} - GANHADOR!</div><div>Seus Números: <span class='numbers'>{', '.join(map(str, p['numeros_full']))}</span></div></div>", unsafe_allow_html=True)
         if premios['Quina']:
             st.markdown("### 💰 QUINA (5 Acertos)")
             for p in premios['Quina']:
-                st.markdown(f"""
-                <div class="ticket-card quina-card">
-                    <span class="local-tag">📍 {p['local']}</span>
-                    <div class="win-title">Bilhete {p['id']}</div>
-                    <div>Acertou: <span class="numbers">{', '.join(map(str, p['acertos']))}</span></div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-        # Quadra
+                st.markdown(f"<div class='ticket-card quina-card'><span class='local-tag'>📍 {p['local']}</span><div class='win-title'>Bilhete {p['id']}</div><div>Acertou: <span class='numbers'>{', '.join(map(str, p['acertos']))}</span></div></div>", unsafe_allow_html=True)
         if premios['Quadra']:
             st.markdown("### 👍 QUADRA (4 Acertos)")
             for p in premios['Quadra']:
-                st.markdown(f"""
-                <div class="ticket-card quadra-card">
-                    <span class="local-tag">📍 {p['local']}</span>
-                    <div class="win-title">Bilhete {p['id']}</div>
-                    <div>Acertou: <span class="numbers">{', '.join(map(str, p['acertos']))}</span></div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"<div class='ticket-card quadra-card'><span class='local-tag'>📍 {p['local']}</span><div class='win-title'>Bilhete {p['id']}</div><div>Acertou: <span class='numbers'>{', '.join(map(str, p['acertos']))}</span></div></div>", unsafe_allow_html=True)
 
 # ==============================================================================
-# 🚀 FRONTEND (STREAMLIT)
+# 🚀 INTERFACE DO USUÁRIO
 # ==============================================================================
 
 st.title("🍀 Conferidor Mega da Virada")
-st.markdown("<div class='subtitle'>Boa sorte! Que seus números sejam os sorteados!</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align: center; color: #666; margin-bottom: 20px;'>Boa sorte! Que seus números sejam os sorteados!</div>", unsafe_allow_html=True)
 
 # Abas para Alternar entre Modos
-tab1, tab2 = st.tabs(["📡 Buscar na Internet", "✍️ Digitar Manualmente"])
+tab1, tab2 = st.tabs(["📡 Buscar Concurso", "✍️ Digitar Números"])
 
 # --- MODO 1: AUTOMÁTICO ---
 with tab1:
-    col1, col2 = st.columns([3, 1])
-    with col1:
+    col_a, col_b = st.columns([3, 1])
+    with col_a:
         concurso_input = st.text_input("Número do Concurso", value="2955")
-    with col2:
-        st.write("") # Espaçamento
-        btn_conferir_auto = st.button("CONFERIR", type="primary", key="btn_auto")
-
-    if btn_conferir_auto:
-        with st.spinner(f"Buscando resultado do concurso {concurso_input}..."):
+    with col_b:
+        st.write("") # Espaçamento vertical para alinhar botão
+        st.write("")
+        btn_auto = st.button("BUSCAR NA CAIXA", type="primary", key="auto")
+    
+    if btn_auto:
+        with st.spinner("Buscando dados oficiais..."):
             resultado = buscar_resultado_api(concurso_input)
-            
             if not resultado:
-                st.error("Não foi possível obter o resultado oficial ainda (ou erro de conexão).")
+                st.error("Erro ao buscar dados. Tente o modo manual.")
             else:
-                st.balloons()
-                st.success(f"🔢 DEZENAS SORTEADAS: {', '.join(map(str, sorted(resultado)))}")
+                st.success(f"Dezenas Sorteadas: {', '.join(map(str, sorted(resultado)))}")
                 apostas = processar_jogos(MEUS_JOGOS)
                 exibir_resultados(resultado, apostas)
 
 # --- MODO 2: MANUAL (6 INPUTS) ---
 with tab2:
-    st.info("Digite as 6 dezenas sorteadas abaixo:")
-    
-    # 6 Colunas para os inputs
+    st.info("Insira as 6 dezenas sorteadas:")
     cols = st.columns(6)
-    n1 = cols[0].number_input("Bola 1", min_value=1, max_value=60, value=1, step=1)
-    n2 = cols[1].number_input("Bola 2", min_value=1, max_value=60, value=2, step=1)
-    n3 = cols[2].number_input("Bola 3", min_value=1, max_value=60, value=3, step=1)
-    n4 = cols[3].number_input("Bola 4", min_value=1, max_value=60, value=4, step=1)
-    n5 = cols[4].number_input("Bola 5", min_value=1, max_value=60, value=5, step=1)
-    n6 = cols[5].number_input("Bola 6", min_value=1, max_value=60, value=6, step=1)
+    n1 = cols[0].number_input("Bola 1", 0, 60, 0)
+    n2 = cols[1].number_input("Bola 2", 0, 60, 0)
+    n3 = cols[2].number_input("Bola 3", 0, 60, 0)
+    n4 = cols[3].number_input("Bola 4", 0, 60, 0)
+    n5 = cols[4].number_input("Bola 5", 0, 60, 0)
+    n6 = cols[5].number_input("Bola 6", 0, 60, 0)
     
-    st.write("") # Espaço
-    btn_conferir_manual = st.button("CONFERIR MANUALMENTE", type="primary", key="btn_manual")
-
-    if btn_conferir_manual:
-        # Pega os valores e cria o conjunto
-        resultado_manual = {n1, n2, n3, n4, n5, n6}
-        
-        # Validação: Verifica se são 6 números ÚNICOS (Set elimina duplicatas)
-        if len(resultado_manual) < 6:
-            st.error("⚠️ Você digitou números repetidos. Por favor, insira 6 dezenas diferentes.")
+    if st.button("CONFERIR MANUALMENTE", type="primary", key="manual"):
+        numeros = {n1, n2, n3, n4, n5, n6}
+        if 0 in numeros:
+            st.warning("⚠️ Alguns campos estão com valor 0. Preencha todos de 1 a 60.")
+        elif len(numeros) < 6:
+            st.warning("⚠️ Números repetidos detectados. Insira 6 números diferentes.")
         else:
-            st.balloons()
-            st.success(f"🔢 CONFERINDO NÚMEROS: {', '.join(map(str, sorted(resultado_manual)))}")
+            st.success(f"Conferindo: {', '.join(map(str, sorted(numeros)))}")
             apostas = processar_jogos(MEUS_JOGOS)
-            exibir_resultados(resultado_manual, apostas)
+            exibir_resultados(numeros, apostas)
 
-# Rodapé com Créditos
+# Rodapé
 st.markdown("<div class='footer'>Desenvolvido por <b>André Santos</b> © 2025</div>", unsafe_allow_html=True)

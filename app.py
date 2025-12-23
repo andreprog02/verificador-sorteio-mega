@@ -19,7 +19,7 @@ st.set_page_config(
 # CSS para esconder menus e deixar bonito
 st.markdown("""
     <style>
-    /* Esconde menu do Streamlit (Segurança Visual) */
+    /* Esconde menu do Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
@@ -728,23 +728,28 @@ with tab1:
 with tab2:
     st.info("Insira as 6 dezenas sorteadas:")
     cols = st.columns(6)
-    n1 = cols[0].number_input("Bola 1", 0, 60, 0)
-    n2 = cols[1].number_input("Bola 2", 0, 60, 0)
-    n3 = cols[2].number_input("Bola 3", 0, 60, 0)
-    n4 = cols[3].number_input("Bola 4", 0, 60, 0)
-    n5 = cols[4].number_input("Bola 5", 0, 60, 0)
-    n6 = cols[5].number_input("Bola 6", 0, 60, 0)
+    # Configuração estrita: min=1, max=60, step=1 (inteiro), formato %02d (ex: 05)
+    n1 = cols[0].number_input("Bola 1", min_value=1, max_value=60, value=None, step=1, format="%02d", placeholder="01")
+    n2 = cols[1].number_input("Bola 2", min_value=1, max_value=60, value=None, step=1, format="%02d", placeholder="02")
+    n3 = cols[2].number_input("Bola 3", min_value=1, max_value=60, value=None, step=1, format="%02d", placeholder="03")
+    n4 = cols[3].number_input("Bola 4", min_value=1, max_value=60, value=None, step=1, format="%02d", placeholder="04")
+    n5 = cols[4].number_input("Bola 5", min_value=1, max_value=60, value=None, step=1, format="%02d", placeholder="05")
+    n6 = cols[5].number_input("Bola 6", min_value=1, max_value=60, value=None, step=1, format="%02d", placeholder="06")
     
+    st.write("") # Espaço
     if st.button("CONFERIR MANUALMENTE", type="primary", key="manual"):
-        numeros = {n1, n2, n3, n4, n5, n6}
-        if 0 in numeros:
-            st.warning("⚠️ Alguns campos estão com valor 0. Preencha todos de 1 a 60.")
-        elif len(numeros) < 6:
-            st.warning("⚠️ Números repetidos detectados. Insira 6 números diferentes.")
+        # Se algum valor for None (não preenchido), avisa
+        if None in [n1, n2, n3, n4, n5, n6]:
+             st.warning("⚠️ Preencha todas as 6 dezenas antes de conferir.")
         else:
-            st.success(f"Conferindo: {', '.join(map(str, sorted(numeros)))}")
-            apostas = processar_jogos(MEUS_JOGOS)
-            exibir_resultados(numeros, apostas)
+            numeros = {n1, n2, n3, n4, n5, n6}
+            if len(numeros) < 6:
+                st.warning("⚠️ Números repetidos detectados. Insira 6 números diferentes.")
+            else:
+                st.balloons()
+                st.success(f"Conferindo: {', '.join(map(str, sorted(numeros)))}")
+                apostas = processar_jogos(MEUS_JOGOS)
+                exibir_resultados(numeros, apostas)
 
 # Rodapé
 st.markdown("<div class='footer'>Desenvolvido por <b>André Santos</b> © 2025</div>", unsafe_allow_html=True)

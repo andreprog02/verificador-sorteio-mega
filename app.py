@@ -15,34 +15,31 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="collapsed"
 )
-# ... (logo abaixo de st.set_page_config)
 
-# 🔒 REMOVER MENU E RODAPÉ PADRÃO
+# CSS Personalizado: Estilo, Cartões e REMOÇÃO DO MENU (Segurança Visual)
 st.markdown("""
     <style>
-        /* Esconde o menu de 3 pontinhos no canto superior direito */
-        #MainMenu {visibility: hidden;}
-        
-        /* Esconde o rodapé padrão "Made with Streamlit" */
-        footer {visibility: hidden;}
-        
-        /* Esconde o cabeçalho colorido */
-        header {visibility: hidden;}
-    </style>
-    """, unsafe_allow_html=True)
+    /* 🔒 SEGURANÇA VISUAL: ESCONDER MENUS DO STREAMLIT */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
 
-# CSS Personalizado para Cartões Bonitos
-st.markdown("""
-    <style>
     /* Estilo Geral */
     .main {
-        background-color: #FFFFFF;
+        background-color: #F8F9FA;
     }
     h1 {
-        color: #1E3A8A; /* Azul Escuro Profissional */
+        color: #1E3A8A;
         text-align: center;
         font-family: 'Arial', sans-serif;
         font-weight: 800;
+        margin-bottom: 0px;
+    }
+    .subtitle {
+        text-align: center;
+        color: #6c757d;
+        font-size: 0.9em;
+        margin-bottom: 30px;
     }
     
     /* Cartões de Resultado */
@@ -50,55 +47,58 @@ st.markdown("""
         padding: 20px;
         border-radius: 12px;
         margin-bottom: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         font-family: 'Verdana', sans-serif;
         color: #333;
+        background-color: white;
     }
     
     /* Cores Específicas para Prêmios */
     .sena-card {
-        background: linear-gradient(135deg, #fff9c4 0%, #fff176 100%);
-        border-left: 8px solid #FFD700;
+        background: linear-gradient(135deg, #FFFDE7 0%, #FFF59D 100%);
+        border-left: 8px solid #FBC02D;
     }
     .quina-card {
-        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
         border-left: 8px solid #1976D2;
     }
     .quadra-card {
-        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+        background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
         border-left: 8px solid #388E3C;
     }
     
     /* Tags e Textos */
     .local-tag {
-        font-size: 0.85em;
+        font-size: 0.75em;
         text-transform: uppercase;
-        color: #555;
+        color: #666;
         font-weight: bold;
-        margin-bottom: 5px;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
         display: block;
     }
     .win-title {
-        font-size: 1.2em;
+        font-size: 1.1em;
         font-weight: bold;
         margin: 5px 0;
     }
     .numbers {
-        background-color: rgba(255,255,255,0.6);
-        padding: 5px 10px;
-        border-radius: 5px;
+        background-color: rgba(0,0,0,0.05);
+        padding: 4px 8px;
+        border-radius: 6px;
         font-family: 'Courier New', monospace;
         font-weight: bold;
+        color: #000;
     }
     
     /* Rodapé */
     .footer {
         text-align: center;
-        color: #888;
-        font-size: 0.9em;
+        color: #adb5bd;
+        font-size: 0.85em;
         margin-top: 50px;
         padding-top: 20px;
-        border-top: 1px solid #eee;
+        border-top: 1px solid #e9ecef;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -728,97 +728,126 @@ def processar_jogos(texto_jogos):
             
     return apostas_processadas
 
+def exibir_resultados(resultado, apostas):
+    premios = {'Sena': [], 'Quina': [], 'Quadra': []}
+    
+    # Confere
+    for aposta in apostas:
+        acertos = aposta['nums'].intersection(resultado)
+        qtd = len(acertos)
+        
+        detalhe = {
+            'local': aposta['local'],
+            'id': aposta['id'],
+            'acertos': sorted(acertos),
+            'numeros_full': sorted(aposta['nums'])
+        }
+        
+        if qtd == 4: premios['Quadra'].append(detalhe)
+        elif qtd == 5: premios['Quina'].append(detalhe)
+        elif qtd >= 6: premios['Sena'].append(detalhe)
+
+    # Exibe Resultados
+    total_premios = len(premios['Sena']) + len(premios['Quina']) + len(premios['Quadra'])
+    
+    if total_premios == 0:
+        st.warning("😢 Nenhum prêmio encontrado nestes bilhetes.")
+    else:
+        # Sena
+        if premios['Sena']:
+            st.markdown("### 🏆 SENA (6 Acertos)")
+            for p in premios['Sena']:
+                st.markdown(f"""
+                <div class="ticket-card sena-card">
+                    <span class="local-tag">📍 {p['local']}</span>
+                    <div class="win-title">BILHETE {p['id']} - GANHADOR DA SENA!</div>
+                    <div>Seus Números: <span class="numbers">{', '.join(map(str, p['numeros_full']))}</span></div>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        # Quina
+        if premios['Quina']:
+            st.markdown("### 💰 QUINA (5 Acertos)")
+            for p in premios['Quina']:
+                st.markdown(f"""
+                <div class="ticket-card quina-card">
+                    <span class="local-tag">📍 {p['local']}</span>
+                    <div class="win-title">Bilhete {p['id']}</div>
+                    <div>Acertou: <span class="numbers">{', '.join(map(str, p['acertos']))}</span></div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+        # Quadra
+        if premios['Quadra']:
+            st.markdown("### 👍 QUADRA (4 Acertos)")
+            for p in premios['Quadra']:
+                st.markdown(f"""
+                <div class="ticket-card quadra-card">
+                    <span class="local-tag">📍 {p['local']}</span>
+                    <div class="win-title">Bilhete {p['id']}</div>
+                    <div>Acertou: <span class="numbers">{', '.join(map(str, p['acertos']))}</span></div>
+                </div>
+                """, unsafe_allow_html=True)
+
 # ==============================================================================
 # 🚀 FRONTEND (STREAMLIT)
 # ==============================================================================
 
 st.title("🍀 Conferidor Mega da Virada")
-st.markdown("---")
+st.markdown("<div class='subtitle'>Boa sorte! Que seus números sejam os sorteados!</div>", unsafe_allow_html=True)
 
-# Input do Concurso
-col1, col2 = st.columns([3, 1])
-with col1:
-    concurso_input = st.text_input("Número do Concurso", value="2955")
-with col2:
-    st.write("") # Espaçamento
-    btn_conferir = st.button("CONFERIR AGORA", type="primary")
+# Abas para Alternar entre Modos
+tab1, tab2 = st.tabs(["📡 Buscar na Internet", "✍️ Digitar Manualmente"])
 
-if btn_conferir:
-    with st.spinner(f"Buscando resultado do concurso {concurso_input}..."):
-        # 1. Busca Resultado
-        resultado = buscar_resultado_api(concurso_input)
-        
-        # Se falhar na API, permite teste manual (mock) ou avisa erro
-        if not resultado:
-            st.error("Não foi possível obter o resultado oficial ainda (ou erro de conexão).")
-            st.info("DICA: Se for um teste, digite o concurso 2700 para ver funcionando.")
-        else:
-            # Mostra as bolas sorteadas
-            st.balloons()
-            st.success(f"🔢 DEZENAS SORTEADAS: {', '.join(map(str, sorted(resultado)))}")
-            
-            # 2. Processa Apostas
-            apostas = processar_jogos(MEUS_JOGOS)
-            premios = {'Sena': [], 'Quina': [], 'Quadra': []}
-            
-            # 3. Confere
-            for aposta in apostas:
-                acertos = aposta['nums'].intersection(resultado)
-                qtd = len(acertos)
-                
-                detalhe = {
-                    'local': aposta['local'],
-                    'id': aposta['id'],
-                    'acertos': sorted(acertos),
-                    'numeros_full': sorted(aposta['nums'])
-                }
-                
-                if qtd == 4: premios['Quadra'].append(detalhe)
-                elif qtd == 5: premios['Quina'].append(detalhe)
-                elif qtd >= 6: premios['Sena'].append(detalhe)
+# --- MODO 1: AUTOMÁTICO ---
+with tab1:
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        concurso_input = st.text_input("Número do Concurso", value="2955")
+    with col2:
+        st.write("") # Espaçamento
+        btn_conferir_auto = st.button("CONFERIR", type="primary", key="btn_auto")
 
-            # 4. Exibe Resultados
-            total_premios = len(premios['Sena']) + len(premios['Quina']) + len(premios['Quadra'])
+    if btn_conferir_auto:
+        with st.spinner(f"Buscando resultado do concurso {concurso_input}..."):
+            resultado = buscar_resultado_api(concurso_input)
             
-            if total_premios == 0:
-                st.warning("😢 Nenhum prêmio encontrado nestes bilhetes.")
+            if not resultado:
+                st.error("Não foi possível obter o resultado oficial ainda (ou erro de conexão).")
             else:
-                # Sena
-                if premios['Sena']:
-                    st.markdown("### 🏆 SENA (6 Acertos)")
-                    for p in premios['Sena']:
-                        st.markdown(f"""
-                        <div class="ticket-card sena-card">
-                            <span class="local-tag">📍 {p['local']}</span>
-                            <div class="win-title">BILHETE {p['id']} - GANHADOR DA SENA!</div>
-                            <div>Seus Números: <span class="numbers">{', '.join(map(str, p['numeros_full']))}</span></div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                
-                # Quina
-                if premios['Quina']:
-                    st.markdown("### 💰 QUINA (5 Acertos)")
-                    for p in premios['Quina']:
-                        st.markdown(f"""
-                        <div class="ticket-card quina-card">
-                            <span class="local-tag">📍 {p['local']}</span>
-                            <div class="win-title">Bilhete {p['id']}</div>
-                            <div>Acertou: <span class="numbers">{', '.join(map(str, p['acertos']))}</span></div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                # Quadra
-                if premios['Quadra']:
-                    st.markdown("### 👍 QUADRA (4 Acertos)")
-                    for p in premios['Quadra']:
-                        st.markdown(f"""
-                        <div class="ticket-card quadra-card">
-                            <span class="local-tag">📍 {p['local']}</span>
-                            <div class="win-title">Bilhete {p['id']}</div>
-                            <div>Acertou: <span class="numbers">{', '.join(map(str, p['acertos']))}</span></div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                st.balloons()
+                st.success(f"🔢 DEZENAS SORTEADAS: {', '.join(map(str, sorted(resultado)))}")
+                apostas = processar_jogos(MEUS_JOGOS)
+                exibir_resultados(resultado, apostas)
+
+# --- MODO 2: MANUAL (6 INPUTS) ---
+with tab2:
+    st.info("Digite as 6 dezenas sorteadas abaixo:")
+    
+    # 6 Colunas para os inputs
+    cols = st.columns(6)
+    n1 = cols[0].number_input("Bola 1", min_value=1, max_value=60, value=1, step=1)
+    n2 = cols[1].number_input("Bola 2", min_value=1, max_value=60, value=2, step=1)
+    n3 = cols[2].number_input("Bola 3", min_value=1, max_value=60, value=3, step=1)
+    n4 = cols[3].number_input("Bola 4", min_value=1, max_value=60, value=4, step=1)
+    n5 = cols[4].number_input("Bola 5", min_value=1, max_value=60, value=5, step=1)
+    n6 = cols[5].number_input("Bola 6", min_value=1, max_value=60, value=6, step=1)
+    
+    st.write("") # Espaço
+    btn_conferir_manual = st.button("CONFERIR MANUALMENTE", type="primary", key="btn_manual")
+
+    if btn_conferir_manual:
+        # Pega os valores e cria o conjunto
+        resultado_manual = {n1, n2, n3, n4, n5, n6}
+        
+        # Validação: Verifica se são 6 números ÚNICOS (Set elimina duplicatas)
+        if len(resultado_manual) < 6:
+            st.error("⚠️ Você digitou números repetidos. Por favor, insira 6 dezenas diferentes.")
+        else:
+            st.balloons()
+            st.success(f"🔢 CONFERINDO NÚMEROS: {', '.join(map(str, sorted(resultado_manual)))}")
+            apostas = processar_jogos(MEUS_JOGOS)
+            exibir_resultados(resultado_manual, apostas)
 
 # Rodapé com Créditos
-
 st.markdown("<div class='footer'>Desenvolvido por <b>André Santos</b> © 2025</div>", unsafe_allow_html=True)

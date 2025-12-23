@@ -219,7 +219,7 @@ B: 04 11 30 40 55 58
 C: 10 11 17 19 30 32
 D: 19 37 38 40 53 55
 E: 27 28 36 46 50 58
-F: 03 11 18 24 29
+F: 02 03 11 18 24 29
 G: 04 28 29 45 57 59
 H: 03 12 16 23 25 57
 I: 09 24 27 28 39 48
@@ -751,3 +751,4 @@ with tab2:
 
 # Rodapé
 st.markdown("<div class='footer'>Desenvolvido por <b>André Santos</b> © 2025</div>", unsafe_allow_html=True)
+
